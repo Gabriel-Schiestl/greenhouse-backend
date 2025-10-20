@@ -1,8 +1,10 @@
 package protocol
 
-type Protocol interface {
+import "net"
+
+type Protocol[H, P any] interface {
 	Name() string
 	HeaderLen() int
-	ParseHeader([]byte) (int, error)
-	ParsePayload([]byte) (any, error)
+	ParseHeader(conn net.Conn) (H, error)
+	ParsePayload(conn net.Conn, header H) (P, error)
 }

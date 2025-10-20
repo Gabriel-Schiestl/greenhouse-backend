@@ -6,7 +6,7 @@ import (
 	"github.com/Gabriel-Schiestl/greenhouse-backend/internal/connection"
 )
 
-func Listen() {
+func Listen(handler *connection.ConnectionHandler) {
 	listener, err := net.Listen("tcp", ":8080")
 	if err != nil {
 		panic(err)
@@ -18,6 +18,6 @@ func Listen() {
 		if err != nil {
 			continue
 		}
-		go connection.HandleConnection(conn)
+		go handler.HandleConnection(conn)
 	}
 }
