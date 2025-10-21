@@ -41,7 +41,7 @@ func (g GLP) Name() string {
 }
 
 func (g GLP) HeaderLen() int {
-	return int(binary.Size(GLPHeader{}))
+	return 26
 }
 
 func (g GLP) ParseHeader(conn net.Conn) (GLPHeader, error) {
