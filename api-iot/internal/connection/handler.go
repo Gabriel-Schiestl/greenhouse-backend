@@ -40,7 +40,13 @@ func (h *ConnectionHandler) HandleConnection(conn net.Conn, processor *processor
 		return
 	}
 
-	result := processor.Start(header, payload)
+	result, processErr := processor.Start(header, payload)
+	if processErr != nil {
+		errResponse := h.buildErrorResponse(processErr)
+
+		conn.Write(errResponse)
+		return
+	}
 
 	response, err := json.Marshal(result)
 	if err != nil {
