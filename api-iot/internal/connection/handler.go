@@ -1,7 +1,6 @@
 package connection
 
 import (
-	"encoding/json"
 	"net"
 
 	"github.com/Gabriel-Schiestl/greenhouse-backend/internal/processor"
@@ -17,7 +16,7 @@ type ConnectionHandler struct {
 
 func NewConnectionHandler() *ConnectionHandler {
 	return &ConnectionHandler{
-		protocol: protocol.GLP{},
+		protocol: &protocol.GLP{},
 	}
 }
 
@@ -25,31 +24,36 @@ func (h *ConnectionHandler) HandleConnection(conn net.Conn, processor *processor
 	for {
 		header, err := h.protocol.ParseHeader(conn)
 		if err != nil {
-			errResponse := h.buildErrorResponse(err)
+			errResponse := h.protocol.BuildErrorResponse(err)
 
 			conn.Write(errResponse)
 			break
 		}
 
-		payload, err := h.protocol.ParsePayload(conn, header)
-		if err != nil {
-			errResponse := h.buildErrorResponse(err)
+		var payload protocol.GLPPayload
+		if header.Method == protocol.GLPMethodGet {
+			payload = protocol.GLPPayload{}
+		} else {
+			payload, err = h.protocol.ParsePayload(conn, header)
+			if err != nil {
+				errResponse := h.protocol.BuildErrorResponse(err)
 
-			conn.Write(errResponse)
-			break
+				conn.Write(errResponse)
+				break
+			}
 		}
 
 		result, processErr := processor.Start(header, payload)
 		if processErr != nil {
-			errResponse := h.buildErrorResponse(processErr)
+			errResponse := h.protocol.BuildErrorResponse(processErr)
 
 			conn.Write(errResponse)
 			break
 		}
 
-		response, err := json.Marshal(result)
+		response, err := h.protocol.BuildResponse(result)
 		if err != nil {
-			errResponse := h.buildErrorResponse(err)
+			errResponse := h.protocol.BuildErrorResponse(err)
 
 			conn.Write(errResponse)
 			break
@@ -63,9 +67,3 @@ func (h *ConnectionHandler) HandleConnection(conn net.Conn, processor *processor
 	conn.Close()
 }
 
-func (h *ConnectionHandler) buildErrorResponse(err error) []byte {
-	result := map[string]any{"error": err.Error()}
-	jsonResponse, _ := json.Marshal(result)
-
-	return jsonResponse
-}

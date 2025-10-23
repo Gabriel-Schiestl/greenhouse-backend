@@ -39,15 +39,15 @@ const (
 	GLPMethodGet  GLPMethod = "GET"
 )
 
-func (g GLP) Name() string {
+func (g *GLP) Name() string {
 	return "GLP"
 }
 
-func (g GLP) HeaderLen() int {
+func (g *GLP) HeaderLen() int {
 	return 26
 }
 
-func (g GLP) ParseHeader(conn net.Conn) (GLPHeader, error) {
+func (g *GLP) ParseHeader(conn net.Conn) (GLPHeader, error) {
 	if tcp, ok := conn.(*net.TCPConn); ok {
         tcp.SetKeepAlive(true)
 		tcp.SetKeepAlivePeriod(30 * time.Second)
@@ -68,7 +68,7 @@ func (g GLP) ParseHeader(conn net.Conn) (GLPHeader, error) {
 	return header, nil
 }
 
-func (g GLP) ParsePayload(conn net.Conn, header GLPHeader) (GLPPayload, error) {
+func (g *GLP) ParsePayload(conn net.Conn, header GLPHeader) (GLPPayload, error) {
 	payloadBytes := make([]byte, header.PayloadLen)
 	_, err := io.ReadFull(conn, payloadBytes)
 	if err != nil {
@@ -82,4 +82,46 @@ func (g GLP) ParsePayload(conn net.Conn, header GLPHeader) (GLPPayload, error) {
 	}
 
 	return payload, nil
+}
+
+func (g *GLP) BuildResponse(data any) ([]byte, error) {
+	header := g.buildResponseHeader(false)
+
+	jsonResponse, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+
+	binary.BigEndian.PutUint16(header[1:3], uint16(len(jsonResponse)))
+
+	response := append(header, jsonResponse...)
+
+	return response, nil
+}
+
+func (g *GLP) BuildErrorResponse(err error) []byte {
+	header := g.buildResponseHeader(true)
+
+	result := map[string]any{"error": err.Error()}
+	jsonResponse, _ := json.Marshal(result)
+
+	binary.BigEndian.PutUint16(header[1:3], uint16(len(jsonResponse)))
+
+	response := append(header, jsonResponse...)
+
+	return response
+}
+
+func (g *GLP) buildResponseHeader(err bool) []byte {
+	headerBytes := make([]byte, 3)
+
+	var method uint8
+	if err {
+		method = 1
+	} else {
+		method = 0
+	}
+
+	headerBytes[0] = method
+	return headerBytes
 }

@@ -7,4 +7,6 @@ type Protocol[H, P any] interface {
 	HeaderLen() int
 	ParseHeader(conn net.Conn) (H, error)
 	ParsePayload(conn net.Conn, header H) (P, error)
+	BuildResponse(data any) ([]byte, error)
+	BuildErrorResponse(err error) []byte
 }
