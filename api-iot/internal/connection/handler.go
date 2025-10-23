@@ -22,41 +22,45 @@ func NewConnectionHandler() *ConnectionHandler {
 }
 
 func (h *ConnectionHandler) HandleConnection(conn net.Conn, processor *processor.Processor) {
-	defer conn.Close()
-	
-	header, err := h.protocol.ParseHeader(conn)
-	if err != nil {
-		errResponse := h.buildErrorResponse(err)
+	for {
+		header, err := h.protocol.ParseHeader(conn)
+		if err != nil {
+			errResponse := h.buildErrorResponse(err)
 
-		conn.Write(errResponse)
-		return
+			conn.Write(errResponse)
+			break
+		}
+
+		payload, err := h.protocol.ParsePayload(conn, header)
+		if err != nil {
+			errResponse := h.buildErrorResponse(err)
+
+			conn.Write(errResponse)
+			break
+		}
+
+		result, processErr := processor.Start(header, payload)
+		if processErr != nil {
+			errResponse := h.buildErrorResponse(processErr)
+
+			conn.Write(errResponse)
+			break
+		}
+
+		response, err := json.Marshal(result)
+		if err != nil {
+			errResponse := h.buildErrorResponse(err)
+
+			conn.Write(errResponse)
+			break
+		}
+
+		_, writeErr := conn.Write(response)
+		if writeErr != nil {
+			break
+		}
 	}
-
-	payload, err := h.protocol.ParsePayload(conn, header)
-	if err != nil {
-		errResponse := h.buildErrorResponse(err)
-
-		conn.Write(errResponse)
-		return
-	}
-
-	result, processErr := processor.Start(header, payload)
-	if processErr != nil {
-		errResponse := h.buildErrorResponse(processErr)
-
-		conn.Write(errResponse)
-		return
-	}
-
-	response, err := json.Marshal(result)
-	if err != nil {
-		errResponse := h.buildErrorResponse(err)
-
-		conn.Write(errResponse)
-		return
-	}
-
-	conn.Write(response)
+	conn.Close()
 }
 
 func (h *ConnectionHandler) buildErrorResponse(err error) []byte {

@@ -3,8 +3,10 @@ package protocol
 import (
 	"encoding/binary"
 	"encoding/json"
+	"io"
 	"net"
 	"strings"
+	"time"
 )
 
 type GLPMethod string
@@ -46,15 +48,20 @@ func (g GLP) HeaderLen() int {
 }
 
 func (g GLP) ParseHeader(conn net.Conn) (GLPHeader, error) {
+	if tcp, ok := conn.(*net.TCPConn); ok {
+        tcp.SetKeepAlive(true)
+		tcp.SetKeepAlivePeriod(30 * time.Second)
+    }
+
 	var header GLPHeader
 	headerBytes := make([]byte, g.HeaderLen())
-	_, err := conn.Read(headerBytes)
+	_, err := io.ReadFull(conn, headerBytes)
 	if err != nil {
 		return GLPHeader{}, err
 	}
 
 	header.PayloadLen = binary.BigEndian.Uint16(headerBytes[0:2])
-	header.Identifier = string(headerBytes[2:10])
+	header.Identifier = strings.TrimRight(string(headerBytes[2:10]), "\x00")
 	header.Method = GLPMethod(strings.TrimRight(string(headerBytes[10:14]), "\x00"))
 	header.Route = strings.TrimRight(string(headerBytes[14:26]), "\x00")
 
@@ -63,7 +70,7 @@ func (g GLP) ParseHeader(conn net.Conn) (GLPHeader, error) {
 
 func (g GLP) ParsePayload(conn net.Conn, header GLPHeader) (GLPPayload, error) {
 	payloadBytes := make([]byte, header.PayloadLen)
-	_, err := conn.Read(payloadBytes)
+	_, err := io.ReadFull(conn, payloadBytes)
 	if err != nil {
 		return GLPPayload{}, err
 	}
