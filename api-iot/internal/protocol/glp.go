@@ -61,9 +61,9 @@ func (g *GLP) ParseHeader(conn net.Conn) (GLPHeader, error) {
 	}
 
 	header.PayloadLen = binary.BigEndian.Uint16(headerBytes[0:2])
-	header.Identifier = strings.TrimRight(string(headerBytes[2:10]), "\x00")
-	header.Method = GLPMethod(strings.TrimRight(string(headerBytes[10:14]), "\x00"))
-	header.Route = strings.TrimRight(string(headerBytes[14:26]), "\x00")
+	header.Identifier = strings.TrimSpace(string(headerBytes[2:10]))
+	header.Method = GLPMethod(strings.TrimSpace(string(headerBytes[10:14])))
+	header.Route = strings.TrimSpace(string(headerBytes[14:26]))
 
 	return header, nil
 }

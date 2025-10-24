@@ -5,9 +5,11 @@ import (
 	"time"
 
 	"github.com/Gabriel-Schiestl/greenhouse-backend/internal/model"
+	"github.com/google/uuid"
 )
 
 type GLPData struct {
+	Id        string
 	SensorID  string   
 	CreatedAt time.Time
 	Temperature float64
@@ -34,6 +36,7 @@ func NewGLPData(sensorID string, createdAt int64, temperature, humidity, soilMoi
 	}
 
 	return &GLPData{
+		Id:        uuid.New().String(),
 		SensorID:    sensorID,
 		CreatedAt:   time.UnixMilli(createdAt),
 		Temperature: temperature,

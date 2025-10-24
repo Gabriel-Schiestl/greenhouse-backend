@@ -2,6 +2,7 @@ package processor
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/Gabriel-Schiestl/greenhouse-backend/internal/domain"
 	"github.com/Gabriel-Schiestl/greenhouse-backend/internal/model"
@@ -42,8 +43,9 @@ func (p *Processor) handlePost(header protocol.GLPHeader, payload protocol.GLPPa
 		if err != nil {
 			return nil, err
 		}
-
-		go p.db.Create(&model.GLPDataModel{
+		fmt.Println("Domain", domain)
+		errDb := p.db.Create(&model.GLPDataModel{
+			Id: domain.Id,
 			SensorID:    domain.SensorID,
 			CreatedAt:   domain.CreatedAt,
 			Temperature: domain.Temperature,
@@ -51,7 +53,7 @@ func (p *Processor) handlePost(header protocol.GLPHeader, payload protocol.GLPPa
 			SoilMoisture: domain.SoilMoisture,
 			LightLevel:  domain.LightLevel,
 		})
-
+		fmt.Println(errDb)
 		var parameters model.GLPParametersModel
 		result := p.db.Where("sensor_id = ?", domain.SensorID).First(&parameters)
 		if result.Error != nil {
@@ -66,14 +68,18 @@ func (p *Processor) handlePost(header protocol.GLPHeader, payload protocol.GLPPa
 
 func (p *Processor) handleGet(header protocol.GLPHeader) (any, error) {
 	switch header.Route {
-	case "sensor/parameters":
+	case "parameters":
 		var parameters model.GLPParametersModel
 		result := p.db.Where("sensor_id = ?", header.Identifier).First(&parameters)
 		if result.Error != nil {
 			return nil, result.Error
 		}
 
-		return parameters, nil
+		return domain.GLPDataReturn{
+			Ventilation: parameters.TurnOnVentilation,
+			Irrigation:  parameters.TurnOnIrrigation,
+			Lighting:    parameters.TurnOnLighting,
+		}, nil
 	default:
 		return nil, errors.New("unknown route")
 	}

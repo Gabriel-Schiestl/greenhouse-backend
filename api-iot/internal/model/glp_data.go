@@ -3,6 +3,7 @@ package model
 import "time"
 
 type GLPDataModel struct {
+	Id        string    `json:"id" gorm:"column:id"`
 	SensorID  string    `json:"sensor_id" gorm:"column:sensor_id"`
 	CreatedAt time.Time `json:"created_at" gorm:"column:created_at"`
 	Temperature float64   `json:"temperature" gorm:"column:temperature"`

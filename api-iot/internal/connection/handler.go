@@ -1,6 +1,7 @@
 package connection
 
 import (
+	"fmt"
 	"net"
 
 	"github.com/Gabriel-Schiestl/greenhouse-backend/internal/processor"
@@ -29,7 +30,7 @@ func (h *ConnectionHandler) HandleConnection(conn net.Conn, processor *processor
 			conn.Write(errResponse)
 			break
 		}
-
+		fmt.Println("Header: ", header, len(header.Method))
 		var payload protocol.GLPPayload
 		if header.Method == protocol.GLPMethodGet {
 			payload = protocol.GLPPayload{}
@@ -42,8 +43,9 @@ func (h *ConnectionHandler) HandleConnection(conn net.Conn, processor *processor
 				break
 			}
 		}
-
+		fmt.Println("Payload: ", payload)
 		result, processErr := processor.Start(header, payload)
+		fmt.Println(result, processErr)
 		if processErr != nil {
 			errResponse := h.protocol.BuildErrorResponse(processErr)
 
