@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/Gabriel-Schiestl/go-clarch/utils"
 	"github.com/Gabriel-Schiestl/greenhouse-backend/internal/connection"
 	"github.com/Gabriel-Schiestl/greenhouse-backend/internal/processor"
 )
@@ -20,7 +21,9 @@ func Listen(handler *connection.ConnectionHandler, processor *processor.Processo
 		if err != nil {
 			continue
 		}
-		fmt.Println(conn.RemoteAddr())
+		
+		utils.Logger.Info().Msg(fmt.Sprintf("Accepted connection from %s", conn.RemoteAddr().String()))
+
 		go handler.HandleConnection(conn, processor)
 	}
 }

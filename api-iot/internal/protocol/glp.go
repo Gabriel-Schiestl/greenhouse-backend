@@ -6,7 +6,6 @@ import (
 	"io"
 	"net"
 	"strings"
-	"time"
 )
 
 type GLPMethod string
@@ -48,11 +47,6 @@ func (g *GLP) HeaderLen() int {
 }
 
 func (g *GLP) ParseHeader(conn net.Conn) (GLPHeader, error) {
-	if tcp, ok := conn.(*net.TCPConn); ok {
-        tcp.SetKeepAlive(true)
-		tcp.SetKeepAlivePeriod(30 * time.Second)
-    }
-
 	var header GLPHeader
 	headerBytes := make([]byte, g.HeaderLen())
 	_, err := io.ReadFull(conn, headerBytes)

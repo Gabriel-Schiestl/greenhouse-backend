@@ -1,0 +1,13 @@
+services:
+  api-iot:
+    image: gabrielschiestl/api-iot:latest
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    networks:
+      - greenhouse-network
+
+networks:
+  greenhouse-network:
+    driver: bridge

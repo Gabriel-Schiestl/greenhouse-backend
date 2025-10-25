@@ -2,8 +2,8 @@ package processor
 
 import (
 	"errors"
-	"fmt"
 
+	"github.com/Gabriel-Schiestl/go-clarch/utils"
 	"github.com/Gabriel-Schiestl/greenhouse-backend/internal/domain"
 	"github.com/Gabriel-Schiestl/greenhouse-backend/internal/model"
 	"github.com/Gabriel-Schiestl/greenhouse-backend/internal/protocol"
@@ -25,13 +25,18 @@ func (p *Processor) Start(header protocol.GLPHeader, payload protocol.GLPPayload
 		case protocol.GLPMethodGet:
 			return p.handleGet(header)
 		default:
+			utils.Logger.Warn().Msg("Unknown method")
 			return nil, errors.New("unknown method")
 	}
 }
 
 func (p *Processor) handlePost(header protocol.GLPHeader, payload protocol.GLPPayload) (any, error) {
+	utils.Logger.Info().Msg("Handling POST request")
+
 	switch header.Route {
 	case "sensor/data":
+		utils.Logger.Info().Msg("Processing sensor/data")
+
 		domain, err := domain.NewGLPData(
 			header.Identifier,
 			payload.Timestamp,
@@ -43,8 +48,8 @@ func (p *Processor) handlePost(header protocol.GLPHeader, payload protocol.GLPPa
 		if err != nil {
 			return nil, err
 		}
-		fmt.Println("Domain", domain)
-		errDb := p.db.Create(&model.GLPDataModel{
+
+		go p.db.Create(&model.GLPDataModel{
 			Id: domain.Id,
 			SensorID:    domain.SensorID,
 			CreatedAt:   domain.CreatedAt,
@@ -53,7 +58,7 @@ func (p *Processor) handlePost(header protocol.GLPHeader, payload protocol.GLPPa
 			SoilMoisture: domain.SoilMoisture,
 			LightLevel:  domain.LightLevel,
 		})
-		fmt.Println(errDb)
+
 		var parameters model.GLPParametersModel
 		result := p.db.Where("sensor_id = ?", domain.SensorID).First(&parameters)
 		if result.Error != nil {
@@ -62,13 +67,18 @@ func (p *Processor) handlePost(header protocol.GLPHeader, payload protocol.GLPPa
 
 		return domain.Apply(parameters), nil
 	default:
+		utils.Logger.Warn().Msg("Unknown route")
 		return nil, errors.New("unknown route")
 	}
 }
 
 func (p *Processor) handleGet(header protocol.GLPHeader) (any, error) {
+	utils.Logger.Info().Msg("Handling GET request")
+
 	switch header.Route {
 	case "parameters":
+		utils.Logger.Info().Msg("Processing parameters")
+
 		var parameters model.GLPParametersModel
 		result := p.db.Where("sensor_id = ?", header.Identifier).First(&parameters)
 		if result.Error != nil {
@@ -81,6 +91,7 @@ func (p *Processor) handleGet(header protocol.GLPHeader) (any, error) {
 			Lighting:    parameters.TurnOnLighting,
 		}, nil
 	default:
+		utils.Logger.Warn().Msg("Unknown route")
 		return nil, errors.New("unknown route")
 	}
 }
