@@ -11,9 +11,9 @@ import (
 )
 
 func main() {
-	err := godotenv.Load("../.env")
+	err := godotenv.Load()
 	if err != nil {
-		utils.Logger.Fatal().Err(err).Msg("Error loading .env file")
+		utils.Logger.Warn().Err(err).Msg("Error loading .env file")
 	}
 
 	dns := config.GetDBConfig()

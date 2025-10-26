@@ -20,7 +20,7 @@ func main() {
 	binary.BigEndian.PutUint16(header[0:2], payloadLen)
 	copy(header[2:10], []byte("device01"))
 	copy(header[10:14], []byte("POST"))
-	copy(header[14:26], []byte("sensor/data"))
+	copy(header[14:26], []byte("sensor/data "))
 
 	req := append(header, payload...)
 
