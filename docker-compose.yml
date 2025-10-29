@@ -7,6 +7,20 @@ services:
       - ./.env_iot
     networks:
       - greenhouse-network
+  api-application:
+    image: gabrielschiestl/api-application:latest
+    ports:
+      - "8080:8080"
+    env_file:
+      - ./.env_application
+    networks:
+      - greenhouse-network
+  greenhouse-frontend:
+    image: gabrielschiestl/greenhouse-frontend:latest
+    ports:
+      - "8081:8081"
+    networks:
+      - greenhouse-network
 
 networks:
   greenhouse-network:
