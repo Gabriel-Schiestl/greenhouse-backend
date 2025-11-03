@@ -39,7 +39,6 @@ func (p *Processor) handlePost(header protocol.GLPHeader, payload protocol.GLPPa
 
 		domain, err := domain.NewGLPData(
 			header.Identifier,
-			payload.Timestamp,
 			float64(payload.Temperature),
 			float64(payload.Humidity),
 			float64(payload.SoilHumidity),

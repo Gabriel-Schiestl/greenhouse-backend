@@ -22,7 +22,6 @@ type GLPPayload struct {
 	Humidity    float32 `json:"humidity,omitempty"`
 	Light       float32 `json:"light,omitempty"`
 	SoilHumidity float32 `json:"soil_humidity,omitempty"`
-	Timestamp   int64   `json:"timestamp,omitempty"`
 }
 
 type GLP struct {

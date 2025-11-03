@@ -24,12 +24,9 @@ type GLPDataReturn struct {
 	Lighting    bool `json:"lighting"`
 }
 
-func NewGLPData(sensorID string, createdAt int64, temperature, humidity, soilMoisture, lightLevel float64) (*GLPData, error) {
+func NewGLPData(sensorID string, temperature, humidity, soilMoisture, lightLevel float64) (*GLPData, error) {
 	if sensorID == "" {
 		return nil, errors.New("invalid sensor ID")
-	}
-	if createdAt == 0 {
-		return nil, errors.New("invalid created at timestamp")
 	}
 	if temperature < 0 || humidity < 0 || soilMoisture < 0 || lightLevel < 0 {
 		return nil, errors.New("invalid sensor data")
@@ -38,7 +35,7 @@ func NewGLPData(sensorID string, createdAt int64, temperature, humidity, soilMoi
 	return &GLPData{
 		Id:        uuid.New().String(),
 		SensorID:    sensorID,
-		CreatedAt:   time.UnixMilli(createdAt),
+		CreatedAt:   time.Now(),
 		Temperature: temperature,
 		Humidity:    humidity,
 		SoilMoisture: soilMoisture,
