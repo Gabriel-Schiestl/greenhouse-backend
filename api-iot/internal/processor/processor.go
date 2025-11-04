@@ -62,9 +62,20 @@ func (p *Processor) handlePost(header protocol.GLPHeader, payload protocol.GLPPa
 		result := p.db.Where("sensor_id = ?", domain.SensorID).First(&parameters)
 		if result.Error != nil {
 			return nil, result.Error
+		} 
+
+		response, update := domain.Apply(parameters)
+
+		if update {
+			parameters.TurnOnVentilation = response.Ventilation
+			parameters.TurnOnIrrigation = response.Irrigation
+			parameters.TurnOnLighting = response.Lighting
+			
+			go p.db.Save(&parameters)
 		}
 
-		return domain.Apply(parameters), nil
+		
+		return response, nil
 	default:
 		utils.Logger.Warn().Msg("Unknown route")
 		return nil, errors.New("unknown route")

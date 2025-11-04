@@ -43,26 +43,32 @@ func NewGLPData(sensorID string, temperature, humidity, soilMoisture, lightLevel
 	}, nil
 }
 
-func (d *GLPData) Apply(parameters model.GLPParametersModel) GLPDataReturn {
+func (d *GLPData) Apply(parameters model.GLPParametersModel) (GLPDataReturn, bool) {
 	ventilation := false
-	if parameters.TurnOnVentilation || d.Temperature >= parameters.MaxTemperature || d.Humidity >= parameters.MaxHumidity {
+	if d.Temperature >= parameters.MaxTemperature || d.Humidity >= parameters.MaxHumidity {
 		ventilation = true
 	}
 
 	irrigation := false
-	if parameters.TurnOnIrrigation || d.SoilMoisture <= parameters.MinSoilMoisture {
+	if d.SoilMoisture <= parameters.MinSoilMoisture {
 		irrigation = true
 	}
 
 	lighting := false
-	if parameters.TurnOnLighting || d.LightLevel < parameters.MinLightLevel {
+	if d.LightLevel < parameters.MinLightLevel {
 		lighting = true
+	}
+
+	if time.Since(parameters.LastUserUpdate) <= 1*time.Hour {
+		ventilation = parameters.TurnOnVentilation
+		irrigation = parameters.TurnOnIrrigation
+		lighting = parameters.TurnOnLighting
 	}
 
 	return GLPDataReturn{
 		Ventilation: ventilation,
 		Irrigation:  irrigation,
 		Lighting:    lighting,
-	}
+	}, time.Since(parameters.LastUserUpdate) > 1*time.Hour
 }
 
