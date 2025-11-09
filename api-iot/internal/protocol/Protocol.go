@@ -1,12 +1,12 @@
 package protocol
 
-import "net"
+import "io"
 
 type Protocol[H, P any] interface {
 	Name() string
 	HeaderLen() int
-	ParseHeader(conn net.Conn) (H, error)
-	ParsePayload(conn net.Conn, header H) (P, error)
+	ParseHeader(reader io.Reader) (H, error)
+	ParsePayload(reader io.Reader, header H) (P, error)
 	BuildResponse(data any) ([]byte, error)
 	BuildErrorResponse(err error) []byte
 }

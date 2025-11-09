@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"io"
-	"net"
 	"strings"
 )
 
@@ -45,10 +44,10 @@ func (g *GLP) HeaderLen() int {
 	return 26
 }
 
-func (g *GLP) ParseHeader(conn net.Conn) (GLPHeader, error) {
+func (g *GLP) ParseHeader(reader io.Reader) (GLPHeader, error) {
 	var header GLPHeader
 	headerBytes := make([]byte, g.HeaderLen())
-	_, err := io.ReadFull(conn, headerBytes)
+	_, err := io.ReadFull(reader, headerBytes)
 	if err != nil {
 		return GLPHeader{}, err
 	}
@@ -61,9 +60,9 @@ func (g *GLP) ParseHeader(conn net.Conn) (GLPHeader, error) {
 	return header, nil
 }
 
-func (g *GLP) ParsePayload(conn net.Conn, header GLPHeader) (GLPPayload, error) {
+func (g *GLP) ParsePayload(reader io.Reader, header GLPHeader) (GLPPayload, error) {
 	payloadBytes := make([]byte, header.PayloadLen)
-	_, err := io.ReadFull(conn, payloadBytes)
+	_, err := io.ReadFull(reader, payloadBytes)
 	if err != nil {
 		return GLPPayload{}, err
 	}
